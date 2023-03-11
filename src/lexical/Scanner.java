@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import utils.TokenType;
 
@@ -12,6 +13,7 @@ public class Scanner {
 	int pos;
 	char[] contentTXT;
 	int state;
+	String[] reservedWords = {"int", "float", "print", "if", "else"};
 
 	public Scanner(String filename) {
 		try {
@@ -52,6 +54,9 @@ public class Scanner {
 				}else if (isParenthesis(currentChar)) {
 					content+= currentChar;
 					return new Token(TokenType.PARENTHESIS, content);
+				}else if (isDot(currentChar)) {
+					content += currentChar;
+					state = 4;
 				}
 				else {
 					throw new RuntimeException("Invalid Character!");
@@ -63,6 +68,9 @@ public class Scanner {
 					state = 1;
 				} else {
 					this.back();
+					if (Arrays.asList(reservedWords).contains(content)) {
+						return new Token(TokenType.RESERVED_WORD, content);
+					}
 					return new Token(TokenType.IDENTYFIER, content);
 				}
 				break;
@@ -70,7 +78,11 @@ public class Scanner {
 				if(isDigit(currentChar)) {
 					content += currentChar;
 					state = 2;
-				} else if(isLetter(currentChar)) {
+				}else if(isDot(currentChar)) {
+					content += currentChar;
+					state = 4;
+				}
+				else if(isLetter(currentChar)) {
 					throw new RuntimeException("Malformed Number!");
 				} else {
 					this.back();
@@ -90,7 +102,17 @@ public class Scanner {
 					this.back();
 					return new Token(TokenType.REL_OP, content);
 				}
-				//break;   unreachable code 
+			case 4:
+				if(isDigit(currentChar)) {
+					content += currentChar;
+					state = 4;
+				}else if (content.charAt(content.length()-1) == '.') {
+					throw new RuntimeException("Malformed Number");
+				}
+				else {
+					this.back();
+					return new Token(TokenType.NUMBER, content);
+				}
 			}
 		}
 	}
@@ -129,6 +151,10 @@ public class Scanner {
 	
 	private boolean isParenthesis(char c) {
 		return c == '(' || c == ')';
+	}
+	
+	private boolean isDot(char c) {
+		return c == '.';
 	}
 
 	private boolean isEOF() {
