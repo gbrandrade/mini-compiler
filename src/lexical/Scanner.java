@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import utils.TokenType;
 
@@ -13,13 +14,21 @@ public class Scanner {
 	int pos;
 	char[] contentTXT;
 	int state;
-	String[] reservedWords = {"int", "float", "print", "if", "else"};
-
+	//Tabela de palavras reservadas
+	HashSet<String> reservedWords = new HashSet<>();
+	
 	public Scanner(String filename) {
 		try {
 			String contentBuffer = new String(Files.readAllBytes(Paths.get(filename)), StandardCharsets.UTF_8);
 			this.contentTXT = contentBuffer.toCharArray();
 			this.pos = 0;
+			
+			//definindo palavras reservadas
+			reservedWords.add("int");
+			reservedWords.add("float");
+			reservedWords.add("print");
+			reservedWords.add("if");
+			reservedWords.add("else");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -57,6 +66,8 @@ public class Scanner {
 				}else if (isDot(currentChar)) {
 					content += currentChar;
 					state = 4;
+				}else if(isHash(currentChar)) {
+					state = 5;
 				}
 				else {
 					throw new RuntimeException("Invalid Character!");
@@ -68,7 +79,7 @@ public class Scanner {
 					state = 1;
 				} else {
 					this.back();
-					if (Arrays.asList(reservedWords).contains(content)) {
+					if (isReservedWord(content)) {
 						return new Token(TokenType.RESERVED_WORD, content);
 					}
 					return new Token(TokenType.IDENTYFIER, content);
@@ -113,6 +124,12 @@ public class Scanner {
 					this.back();
 					return new Token(TokenType.NUMBER, content);
 				}
+			case 5: 
+				if(isEOL(currentChar)) {
+					state = 0;
+				}else {
+					state = 5;
+				}
 			}
 		}
 	}
@@ -156,11 +173,23 @@ public class Scanner {
 	private boolean isDot(char c) {
 		return c == '.';
 	}
+	
+	private boolean isHash(char c) {
+		return c == '#';
+	}
+	
+	private boolean isEOL(char c) {
+		return c == '\n' || c == '\r';
+	}
 
 	private boolean isEOF() {
 		if (this.pos >= this.contentTXT.length) {
 			return true;
 		}
 		return false;
+	}
+	
+	private boolean isReservedWord(String s) {
+		return this.reservedWords.contains(s);
 	}
 }
