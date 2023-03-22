@@ -1,3 +1,4 @@
+//Gabriel Monteiro de Andrade  -  20190162570
 package lexical;
 
 import java.io.IOException;
@@ -59,10 +60,13 @@ public class Scanner {
 					state = 3;
 				}else if(isMathOp(currentChar)) {
 					content += currentChar;
-					return new Token(TokenType.MATH_OP, content);				
-				}else if (isParenthesis(currentChar)) {
+					return new Token(TokenType.MATH_OPERATOR, content);				
+				}else if (isLeftPar(currentChar)) {
 					content+= currentChar;
-					return new Token(TokenType.PARENTHESIS, content);
+					return new Token(TokenType.LEFT_PARENTHESIS, content);
+				}else if (isRightPar(currentChar)) {
+					content+= currentChar;
+					return new Token(TokenType.RIGHT_PARENTHESIS, content);
 				}else if (isDot(currentChar)) {
 					content += currentChar;
 					state = 4;
@@ -103,7 +107,7 @@ public class Scanner {
 			case 3:
 				if(currentChar == '=') {
 					content += currentChar;
-					return new Token(TokenType.REL_OP, content);
+					return new Token(TokenType.RELATIONAL_OPERATOR, content);
 				}else if (content.equals("=")) {
 					this.back();
 					return new Token(TokenType.ASSIGNMENT, content);
@@ -111,25 +115,26 @@ public class Scanner {
 					throw new RuntimeException("Malformed Relational Operator!");
 				}else {
 					this.back();
-					return new Token(TokenType.REL_OP, content);
+					return new Token(TokenType.RELATIONAL_OPERATOR, content);
 				}
 			case 4:
 				if(isDigit(currentChar)) {
 					content += currentChar;
 					state = 4;
 				}else if (content.charAt(content.length()-1) == '.') {
-					throw new RuntimeException("Malformed Number");
-				}
-				else {
+					throw new RuntimeException("Malformed Number!");
+				}else {
 					this.back();
 					return new Token(TokenType.NUMBER, content);
 				}
+				break;
 			case 5: 
 				if(isEOL(currentChar)) {
 					state = 0;
 				}else {
 					state = 5;
 				}
+				break;
 			}
 		}
 	}
@@ -166,8 +171,12 @@ public class Scanner {
 		return c == '+' || c == '-' || c == '*' || c == '/';
 	}
 	
-	private boolean isParenthesis(char c) {
-		return c == '(' || c == ')';
+	private boolean isLeftPar(char c) {
+		return c == '(';
+	}
+	
+	private boolean isRightPar(char c) {
+		return c == ')';
 	}
 	
 	private boolean isDot(char c) {
