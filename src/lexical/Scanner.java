@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashSet;
 
 import utils.TokenType;
@@ -45,6 +44,8 @@ public class Scanner {
 				return null;
 			}
 			currentChar = this.nextChar();
+			if(isInvalidChar(currentChar))
+			  throw new RuntimeException("Invalid Character! at line: " + this.countLine() + " and column: " + this.countColumn());
 			switch (state) {
 			case 0:
 				if (isLetter(currentChar) || isUnderscore(currentChar)) {
@@ -74,7 +75,7 @@ public class Scanner {
 					state = 5;
 				}
 				else {
-					throw new RuntimeException("Invalid Character!");
+					throw new RuntimeException("Invalid Character! at ");
 				}
 				break;
 			case 1:
@@ -121,7 +122,7 @@ public class Scanner {
 				if(isDigit(currentChar)) {
 					content += currentChar;
 					state = 4;
-				}else if (content.charAt(content.length()-1) == '.') {
+				}else if (isLetter(currentChar) || isDot(currentChar) || content.charAt(content.length()-1) == '.') {
 					throw new RuntimeException("Malformed Number!");
 				}else {
 					this.back();
@@ -200,5 +201,33 @@ public class Scanner {
 	
 	private boolean isReservedWord(String s) {
 		return this.reservedWords.contains(s);
+	}
+	
+	private boolean isInvalidChar(char c) {
+	  if(!isLetter(c) && !isDigit(c) && !isRelOp(c) && !isSpace(c) && !isUnderscore(c) && !isMathOp(c) && !isLeftPar(c) 
+	      && !isRightPar(c) && !isDot(c) && !isHash(c) && !isEOL(c)){
+	    return true;
+	  }
+	  return false;
+	}
+	
+	private int countLine() {
+	  int count=0;
+	  for(int i=0; i<pos; i++) {
+	    if(isEOL(contentTXT[i]))
+	      count++;
+	  }
+	  return count + 1;
+	}
+	
+	private int countColumn() {
+	  int count=0;
+    for(int i=0; i<pos; i++) {
+      if(isEOL(contentTXT[i]))
+        count = 0;
+      else
+        count++;
+    }
+    return count;
 	}
 }
