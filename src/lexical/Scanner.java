@@ -7,14 +7,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
+import exceptions.LexicalException;
 import utils.TokenType;
 
 public class Scanner {
 
-	int pos;
+  int pos;  
 	char[] contentTXT;
 	int state;
-	//Tabela de palavras reservadas
 	HashSet<String> reservedWords = new HashSet<>();
 	
 	public Scanner(String filename) {
@@ -24,11 +24,22 @@ public class Scanner {
 			this.pos = 0;
 			
 			//definindo palavras reservadas
-			reservedWords.add("int");
-			reservedWords.add("float");
-			reservedWords.add("print");
-			reservedWords.add("if");
-			reservedWords.add("else");
+			reservedWords.add("INTEIRO");
+			reservedWords.add("REAL");
+			reservedWords.add("PRINT");
+			reservedWords.add("IF");
+			reservedWords.add("ELSE");
+			reservedWords.add("THEN");
+			reservedWords.add("DECALRACOES");
+			reservedWords.add("ALGORITMO");
+			reservedWords.add("NUMINT");
+			reservedWords.add("NUMREAL");
+			reservedWords.add("AND");
+			reservedWords.add("OR");
+			reservedWords.add("ASSIGN");
+			reservedWords.add("TO");
+			reservedWords.add("INPUT");
+			reservedWords.add("WHILE");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -45,7 +56,7 @@ public class Scanner {
 			}
 			currentChar = this.nextChar();
 			if(isInvalidChar(currentChar))
-			  throw new RuntimeException("Invalid Character! at line: " + this.countLine() + " and column: " + this.countColumn());
+			  throw new LexicalException("Invalid character", this.countLine(), this.countColumn());
 			switch (state) {
 			case 0:
 				if (isLetter(currentChar) || isUnderscore(currentChar)) {
@@ -73,9 +84,15 @@ public class Scanner {
 					state = 4;
 				}else if(isHash(currentChar)) {
 					state = 5;
+				}else if(isColon(currentChar)) {
+				  content += currentChar;
+				  return new Token(TokenType.COLON, content);
+				}else if(isSemicolon(currentChar)) {
+				  content += currentChar;
+				  return new Token(TokenType.SEMICOLON, content);
 				}
 				else {
-					throw new RuntimeException("Invalid Character! at ");
+					throw new LexicalException("Invalid character", this.countLine(), this.countColumn());
 				}
 				break;
 			case 1:
@@ -99,7 +116,7 @@ public class Scanner {
 					state = 4;
 				}
 				else if(isLetter(currentChar)) {
-					throw new RuntimeException("Malformed Number!");
+					throw new LexicalException("Malformed number", this.countLine(), this.countColumn());
 				} else {
 					this.back();
 					return new Token(TokenType.NUMBER, content);
@@ -113,7 +130,7 @@ public class Scanner {
 					this.back();
 					return new Token(TokenType.ASSIGNMENT, content);
 				}else if(content.equals("!")) {
-					throw new RuntimeException("Malformed Relational Operator!");
+					throw new LexicalException("Malformed relational operator", this.countLine(), this.countColumn());
 				}else {
 					this.back();
 					return new Token(TokenType.RELATIONAL_OPERATOR, content);
@@ -123,7 +140,7 @@ public class Scanner {
 					content += currentChar;
 					state = 4;
 				}else if (isLetter(currentChar) || isDot(currentChar) || content.charAt(content.length()-1) == '.') {
-					throw new RuntimeException("Malformed Number!");
+					throw new LexicalException("Malformed number", this.countLine(), this.countColumn());
 				}else {
 					this.back();
 					return new Token(TokenType.NUMBER, content);
@@ -191,6 +208,14 @@ public class Scanner {
 	private boolean isEOL(char c) {
 		return c == '\n' || c == '\r';
 	}
+	
+	private boolean isColon(char c) {
+	  return c == ':';
+	}
+	
+	private boolean isSemicolon(char c) {
+	  return c == ';';
+	}
 
 	private boolean isEOF() {
 		if (this.pos >= this.contentTXT.length) {
@@ -205,7 +230,7 @@ public class Scanner {
 	
 	private boolean isInvalidChar(char c) {
 	  if(!isLetter(c) && !isDigit(c) && !isRelOp(c) && !isSpace(c) && !isUnderscore(c) && !isMathOp(c) && !isLeftPar(c) 
-	      && !isRightPar(c) && !isDot(c) && !isHash(c) && !isEOL(c)){
+	      && !isRightPar(c) && !isDot(c) && !isHash(c) && !isEOL(c) && !isColon(c) && !isSemicolon(c)){
 	    return true;
 	  }
 	  return false;
