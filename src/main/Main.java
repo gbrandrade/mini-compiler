@@ -10,7 +10,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 	  try {
-      Scanner scanner = new Scanner("codigo_fonte_do_AS_feito_em_sala.mc");
+      Scanner scanner = new Scanner("deve-rodar.mc");
       Parser parser = new Parser(scanner);
       parser.programa();
       System.out.println("Compilation successful!");

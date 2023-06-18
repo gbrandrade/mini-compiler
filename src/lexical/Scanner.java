@@ -30,7 +30,7 @@ public class Scanner {
 			reservedWords.add("IF");
 			reservedWords.add("ELSE");
 			reservedWords.add("THEN");
-			reservedWords.add("DECALRACOES");
+			reservedWords.add("DECLARACOES");
 			reservedWords.add("ALGORITMO");
 			reservedWords.add("NUMINT");
 			reservedWords.add("NUMREAL");
@@ -55,7 +55,7 @@ public class Scanner {
 				return null;
 			}
 			currentChar = this.nextChar();
-			if(isInvalidChar(currentChar))
+			if(isInvalidChar(currentChar) && state!=5 && state != 6)
 			  throw new LexicalException("Invalid character", this.countLine(), this.countColumn());
 			switch (state) {
 			case 0:
@@ -90,6 +90,9 @@ public class Scanner {
 				}else if(isSemicolon(currentChar)) {
 				  content += currentChar;
 				  return new Token(TokenType.SEMICOLON, content);
+				}else if(isQuot(currentChar)) {
+				  content += currentChar;
+          state = 6;
 				}
 				else {
 					throw new LexicalException("Invalid character", this.countLine(), this.countColumn());
@@ -153,7 +156,12 @@ public class Scanner {
 					state = 5;
 				}
 				break;
-			}
+      case 6:
+        if(!isQuot(currentChar))
+          content += currentChar;
+        else
+          return new Token(TokenType.STRING, content);
+			}			  
 		}
 	}
 
@@ -216,6 +224,10 @@ public class Scanner {
 	private boolean isSemicolon(char c) {
 	  return c == ';';
 	}
+	
+	private boolean isQuot(char c) {
+	   return c == '"';
+	}
 
 	private boolean isEOF() {
 		if (this.pos >= this.contentTXT.length) {
@@ -230,13 +242,13 @@ public class Scanner {
 	
 	private boolean isInvalidChar(char c) {
 	  if(!isLetter(c) && !isDigit(c) && !isRelOp(c) && !isSpace(c) && !isUnderscore(c) && !isMathOp(c) && !isLeftPar(c) 
-	      && !isRightPar(c) && !isDot(c) && !isHash(c) && !isEOL(c) && !isColon(c) && !isSemicolon(c)){
+	      && !isRightPar(c) && !isDot(c) && !isHash(c) && !isEOL(c) && !isColon(c) && !isSemicolon(c) && !isQuot(c)){
 	    return true;
 	  }
 	  return false;
 	}
 	
-	private int countLine() {
+	public int countLine() {
 	  int count=0;
 	  for(int i=0; i<pos; i++) {
 	    if(isEOL(contentTXT[i]))
@@ -245,7 +257,7 @@ public class Scanner {
 	  return count + 1;
 	}
 	
-	private int countColumn() {
+	public int countColumn() {
 	  int count=0;
     for(int i=0; i<pos; i++) {
       if(isEOL(contentTXT[i]))
